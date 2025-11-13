@@ -1,24 +1,63 @@
+// 1. Include all our modules
 mod block;
 mod blockchain;
+mod transaction;
+mod wallet;
+
+// 2. Bring our key structs into scope
 use blockchain::Blockchain;
+use transaction::{Transaction, TransactionPayload};
+use wallet::Wallet;
 
 fn main() {
-    // 4. Create a new blockchain instance
-    //    (This will automatically create the Genesis Block)
+    // --- SETUP ---
+    // 1. Create a new blockchain
     let mut chain = Blockchain::new();
     println!("Blockchain created!");
 
-    // 5. Add a few new blocks with some test data
+    // 2. Create two wallets
+    let alice_wallet = Wallet::new();
+    let miner_wallet = Wallet::new(); // The miner needs an address too
+
+    println!("Created Alice's wallet.");
+    println!("Created Miner's wallet.");
+
+    // --- CREATE TRANSACTION ---
+    // 3. Alice creates a transaction to pay the miner 10 "DataCoin"
+    //    (Even though balances aren't enforced yet, we can create the transaction)
+    let tx_payload = TransactionPayload::Transfer {
+        recipient: miner_wallet.verifying_key, // Miner's public key
+        amount: 10,
+    };
+    
+    let tx1 = Transaction::new(&alice_wallet, tx_payload);
+    println!("Alice created transaction: {:?}", tx1.payload);
+
+    // --- MEMPOOL ---
+    // 4. Add the transaction to the blockchain's mempool
+    let added = chain.add_transaction_to_mempool(tx1);
+    if added {
+        println!("Transaction added to mempool.");
+    } else {
+        println!("Failed to add transaction.");
+    }
+
+    // --- MINING ---
+    // 5. Mine a new block.
+    //    This should grab all transactions from the mempool.
     println!("Mining block 1...");
-    chain.mine_block(vec!["Transaction Data 1".to_string()]);
+    chain.mine_block(); // Notice: no arguments needed!
 
-    println!("Mining block 2...");
-    chain.mine_block(vec!["Transaction Data 2A".to_string(), "Transaction Data 2B".to_string()]);
-
-    // 6. Print the entire blockchain to the console
+    // --- VERIFICATION ---
+    // 6. Print and validate the chain
     println!("\nFull Blockchain:\n{:#?}", chain);
-
-    // 7. Validate the blockchain
+    
     let is_valid = chain.is_chain_valid();
     println!("\nIs the blockchain valid? {}", is_valid);
+
+    // 7. Check the block
+    if let Some(block1) = chain.chain.get(1) {
+        println!("\nTransactions in Block 1:");
+        println!("{:#?}", block1.transactions);
+    }
 }

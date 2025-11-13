@@ -1,3 +1,4 @@
+use crate::transaction::Transaction;
 use serde::Serialize;
 use chrono::prelude::*;
 use sha2::{Sha256, Digest};
@@ -7,7 +8,7 @@ use serde_json;
 pub struct Block {
     pub index: u64,
     pub timestamp: i64,
-    pub transactions: Vec<String>, // Just simple strings for now
+    pub transactions: Vec<Transaction>, 
     pub previous_hash: String,
     pub hash: String,
     pub nonce: u64, // This is for Proof-of-Work in Phase 2
@@ -15,7 +16,7 @@ pub struct Block {
 
 impl Block {
     // 1. The "new" function (constructor)
-    pub fn new(index: u64, transactions: Vec<String>, previous_hash: String) -> Self {
+    pub fn new(index: u64, transactions: Vec<Transaction>, previous_hash: String) -> Self {
         let timestamp = Utc::now().timestamp();
         let mut block = Block {
             index,
