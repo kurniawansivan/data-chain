@@ -1,4 +1,5 @@
 use crate::block::Block;
+use chrono::Utc;
 
 #[derive(Debug)]
 pub struct Blockchain {
@@ -34,20 +35,46 @@ impl Blockchain {
         self.chain.last().unwrap()
     }
 
-    // 6. A *temporary* function to add a new block (for testing)
-    //    We will replace this in Phase 2 with `mine_block()`.
-    pub fn add_block(&mut self, transactions: Vec<String>) {
-        // Get the hash of the last block in the chain
+    // This is the new "mining" function that replaces `add_block`
+    pub fn mine_block(&mut self, transactions: Vec<String>) {
         let previous_hash = self.get_last_block().hash.clone();
-        
-        // Create the new block
-        let new_block = Block::new(
-            self.chain.len() as u64, // index is the current length of the chain
-            transactions,
-            previous_hash,
-        );
+        let mut index = self.chain.len() as u64;
+        let mut nonce = 0;
+        let timestamp = Utc::now().timestamp();
 
-        // Add the new block to the chain
-        self.chain.push(new_block);
+        // Start the mining loop
+        loop {
+            // Create a temporary block with the current nonce
+            let mut block = Block {
+                index,
+                timestamp,
+                transactions: transactions.clone(),
+                previous_hash: previous_hash.clone(),
+                hash: String::new(), // Hash will be calculated
+                nonce,
+            };
+
+            // Calculate the hash for this temporary block
+            let hash = block.calculate_hash();
+
+            // ---- THIS IS THE PROOF-OF-WORK CHECK ----
+            // Create the required prefix (e.g., "00" if difficulty is 2)
+            let prefix = "0".repeat(self.difficulty);
+
+            // Check if the hash has the required prefix
+            if hash.starts_with(&prefix) {
+                // If it does, we found a valid block!
+                println!("Block Mined! Hash: {}", hash);
+                block.hash = hash; // Set the valid hash
+                self.chain.push(block); // Add the block to the chain
+                break; // Exit the loop
+            } else {
+                // If it doesn't, increment the nonce and try again
+                nonce += 1;
+                // We'll also update the index in case another node found a block
+                // (This is a simplified view for now but good practice)
+                index = self.chain.len() as u64;
+            }
+        }
     }
 }
