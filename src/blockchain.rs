@@ -77,4 +77,33 @@ impl Blockchain {
             }
         }
     }
+    pub fn is_chain_valid(&self) -> bool {
+    // Start at block 1 (index 1), not the genesis block
+    for i in 1..self.chain.len() {
+        let current_block = &self.chain[i];
+        let previous_block = &self.chain[i - 1];
+
+        // 1. Check if the current block's hash is valid
+        if current_block.hash != current_block.calculate_hash() {
+            println!("Validation Failed: Block {} hash is invalid.", current_block.index);
+            return false;
+        }
+
+        // 2. Check if the previous_hash field links correctly
+        if current_block.previous_hash != previous_block.hash {
+            println!("Validation Failed: Block {} previous_hash does not match block {}.", current_block.index, previous_block.index);
+            return false;
+        }
+
+        // 3. Check if the block's hash meets the PoW difficulty
+        let prefix = "0".repeat(self.difficulty);
+        if !current_block.hash.starts_with(&prefix) {
+            println!("Validation Failed: Block {} hash does not meet difficulty.", current_block.index);
+            return false;
+        }
+    }
+
+    // If we checked all blocks and all are valid
+    true
+    }
 }

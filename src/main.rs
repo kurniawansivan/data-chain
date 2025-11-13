@@ -17,4 +17,8 @@ fn main() {
 
     // 6. Print the entire blockchain to the console
     println!("\nFull Blockchain:\n{:#?}", chain);
+
+    // 7. Validate the blockchain
+    let is_valid = chain.is_chain_valid();
+    println!("\nIs the blockchain valid? {}", is_valid);
 }
